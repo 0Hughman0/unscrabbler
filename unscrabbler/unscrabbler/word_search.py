@@ -1,6 +1,8 @@
 import functools
 
+
 class Node:
+
     __slots__ = ['letter', 'is_word', 'branches']
 
     def __init__(self, letter):
@@ -27,6 +29,9 @@ class Node:
 
 
 class WordTree:
+    """
+    Probably could be a function...
+    """
 
     def __init__(self, words):
         self.tree = {}
@@ -43,39 +48,16 @@ class WordTree:
                     branch[l] = branch = Node(l)
             branch.is_word = True
 
-    def __getitem__(self, keys):
-        trunks = {'': self.tree}
-        word_length = len(keys)
-        if not isinstance(keys, tuple):
-            keys = (keys,)
+        self.find_playable.cache_clear()  # being thorough
 
-        for i, key in enumerate(keys):
-            branches = {}
-            for root, trunk in trunks.items():
-                if isinstance(key, slice):
-                    for node in trunk.values():
-                        if node.is_word and i + 1 == word_length:
-                            yield root + node.letter
-                        branches[root + node.letter] = node.branches
-
-                elif isinstance(key, str):
-                    node = trunk.get(key)
-                    if node:
-                        if node.is_word and i + 1 == word_length:
-                            yield root + node.letter
-                        branches[root + node.letter] = node.branches
-            trunks = branches
-
-    def find_playable(self, pattern, hand, lbuff=None):
+    @functools.lru_cache(None)  # safe to cache
+    def find_playable(self, pattern, hand):
         pattern = [l.upper() if l else '' for l in pattern]
         hand = [l.upper() for l in hand]
 
-        if lbuff is None:
-            for lbuff, l in enumerate(pattern):
-                if l:
-                    break
-
         trunks = {'': (self.tree, list(hand))}
+
+        words = []  # used to be a generator, but that messes with caching.
 
         for i, letter in enumerate(pattern):
             branches = {}
@@ -85,20 +67,21 @@ class WordTree:
                 next_letter = ''
 
             for root, (trunk, hand) in trunks.items():
-                if not letter:  # any letter
-                    blanks = hand.count('?')
-                    for node in trunk.values():
-                        if node.letter in hand or blanks:
-                            l = node.letter.lower() if blanks else node.letter
+                if not letter:  # blank space
+                    has_blanks = '?' in hand
+
+                    for node in trunk.values():  # all letters
+                        if node.letter in hand or has_blanks:
+                            l = node.letter.lower() if has_blanks else node.letter
                         else:
                             continue
 
                         word = root + l
                         if node.is_word and not next_letter:
-                            yield word
+                            words.append(word)
 
                         new_hand = hand.copy()
-                        if not blanks:
+                        if not has_blanks:
                             new_hand.remove(l)
                         else:
                             new_hand.remove('?')
@@ -107,15 +90,18 @@ class WordTree:
                 else:
                     node = trunk.get(letter)
                     if node:
-                        if (node.is_word and not next_letter):
-                            yield root + node.letter
+                        if node.is_word and not next_letter:
+                            words.append(root + node.letter)
                         branches[root + node.letter] = (node.branches, hand)
             trunks = branches
 
-    def check_word(self, word):
+        return words
+
+    def is_word(self, word):
         p = self.tree
         for i, l in enumerate(word):
             p = p.get(l)
+            if p is None:
+                return False
 
-            if p.is_word:
-                return True
+        return p.is_word
