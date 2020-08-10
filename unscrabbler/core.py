@@ -22,6 +22,13 @@ def iter_word(word, start, direction):
 
 
 class _Game:
+    """
+    Abstract base class for Scrabble game playing.
+
+    Subclass and set config_dir attribute to configure.
+
+    See example configurations in configs folder!
+    """
 
     config_dir = None
     scrabble_bonus = 50
@@ -222,14 +229,24 @@ class _Game:
 
 
 class ScrabbleGame(_Game):
+    """
+    Configured to play using OG board game rules
+    """
+
     config_dir = Path(__file__).parent / 'configs' / 'Scrabble'
 
 
 class WWFGame(_Game):
+    """
+    Configured to play with Words With Friends rules
+    """
     scrabble_bonus = 35
 
     config_dir = Path(__file__).parent / 'configs' / 'WWF'
 
 
-class WordWarsGame(_Game):
+class WordMaster(_Game):
+    """
+    Configured to play with WordMaster rules
+    """
     config_dir = Path(__file__).parent / 'configs' / 'WordWars'
