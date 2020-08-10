@@ -172,8 +172,11 @@ class _Game:
         score += sum(self.calc_word_score(word, coord, direction) for coord, direction, word in secondaries)
         return score
 
-    def make_hand(self):
-        return random.choices(list(self.bag.keys()), list(self.bag.values()), k=7)
+    def make_hand(self, size=7, ignore_bag=False):
+        bag = self.letter_freqs if ignore_bag else self.bag
+        if len(bag) < size:
+            size = len(bag)
+        return random.choices(list(bag.keys()), list(bag.values()), k=size)
 
     def save(self, filename):
         np.savetxt(filename, self.board, '%s', delimiter=',')
