@@ -1,1 +1,1 @@
-from .core import WWFGame, ScrabbleGame, WordMaster, ACROSS, DOWN
+from .core import play_game, WWFGame, ScrabbleGame, WordMasterGame, ACROSS, DOWN
