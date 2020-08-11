@@ -12,7 +12,7 @@ the best move is another challenge!
 * Open up `play.ipynb`.
 * Coords are in form `(row, col)`.
 * Blanks in your hand are represented by `?`, blanks on the board are denoted by `lowercase` all other letters should be
-`UPPERCASE`
+`UPPERCASE`, and an empty square is filled with an empty string i.e. `''`.
 
 ## Some programming lessons I learnt
 

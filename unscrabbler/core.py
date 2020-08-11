@@ -58,7 +58,8 @@ class _Game:
         with open(f'{self.config_dir}/letter_freq.json') as f:
             self.letter_freqs = json.load(f)
 
-        self.bag = self.letter_freqs.copy()
+        self.bag = []
+        self.resync_bag()
 
         with open(f'{self.config_dir}/words.txt') as f:
             self.all_words = [word.strip().upper() for word in f if word.strip().isalpha() and word.strip().islower()]
@@ -84,14 +85,13 @@ class _Game:
         """
         set `self.bag` by examining what we started with and what's on the board
         """
-        new_bag = self.letter_freqs.copy()
+        self.bag = list(itertools.chain.from_iterable(l * f for l, f in self.letter_freqs.items()))
         for row in self.board:
             for l in row:
                 if l:
                     l = l if l.isupper() else '?'
-                    new_bag[l] += -1
-
-        self.bag = new_bag
+                    if l in self.bag:
+                        self.bag.remove(l)
 
     def find_secondary_words(self, word, start, direction):
         """
@@ -172,11 +172,10 @@ class _Game:
         score += sum(self.calc_word_score(word, coord, direction) for coord, direction, word in secondaries)
         return score
 
-    def make_hand(self, size=7, ignore_bag=False):
-        bag = self.letter_freqs if ignore_bag else self.bag
-        if len(bag) < size:
-            size = len(bag)
-        return random.choices(list(bag.keys()), list(bag.values()), k=size)
+    def make_hand(self, size=7):
+        if len(self.bag) < size:
+            size = len(self.bag)
+        return random.sample(self.bag, k=size)
 
     def save(self, filename):
         np.savetxt(filename, self.board, '%s', delimiter=',')
